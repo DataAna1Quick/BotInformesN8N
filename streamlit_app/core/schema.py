@@ -7,6 +7,11 @@ from pathlib import Path
 
 import pandas as pd
 
+from .errors import SchemaInvalidError
+
+# Backwards-compatible alias for older imports.
+SchemaError = SchemaInvalidError
+
 # Columns expected to drive the analysis. Missing any → hard error.
 REQUIRED_COLUMNS = (
     "service_id",
@@ -60,10 +65,6 @@ EXPECTED_COLUMNS = (
 DEFAULT_SHEET_CANDIDATES = ("FLEISCHMANN", "Sheet1", "Hoja1")
 
 
-class SchemaError(ValueError):
-    """Raised when the uploaded Excel does not match the expected n8n shape."""
-
-
 @dataclass
 class SchemaCheck:
     sheet_name: str
@@ -99,15 +100,15 @@ def pick_sheet(xls: pd.ExcelFile) -> str:
 def validate(source: bytes | str | Path | BytesIO) -> SchemaCheck:
     """Validate that `source` is a readable Excel with the n8n structure.
 
-    Raises SchemaError with an actionable message if a required column is missing.
+    Raises SchemaInvalidError with an actionable message if a required column is missing.
     """
     try:
         xls = _open_excel(source)
     except Exception as e:
-        raise SchemaError(f"No se pudo abrir el archivo Excel: {type(e).__name__}: {e}") from e
+        raise SchemaInvalidError(f"No se pudo abrir el archivo Excel: {type(e).__name__}: {e}") from e
 
     if not xls.sheet_names:
-        raise SchemaError("El archivo Excel no contiene hojas.")
+        raise SchemaInvalidError("El archivo Excel no contiene hojas.")
 
     sheet = pick_sheet(xls)
     df = pd.read_excel(xls, sheet_name=sheet, nrows=0)
@@ -118,7 +119,7 @@ def validate(source: bytes | str | Path | BytesIO) -> SchemaCheck:
     extras = [c for c in cols if c not in EXPECTED_COLUMNS]
 
     if missing_required:
-        raise SchemaError(
+        raise SchemaInvalidError(
             "El Excel no tiene la estructura n8n esperada. "
             f"Faltan columnas obligatorias: {', '.join(missing_required)}."
         )

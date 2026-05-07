@@ -13,8 +13,14 @@ from pathlib import Path
 import streamlit as st
 
 from core.auth import verify_password
+from core.errors import (
+    ClientNameMissingError,
+    EmptyAfterFilterError,
+    LogoInvalidError,
+    PipelineError,
+)
 from core.llm_indicators import health_check
-from core.pipeline import run_pipeline_full
+from core.pipeline import preview_palette, run_pipeline_full
 from core.schema import SchemaError
 
 
@@ -169,6 +175,27 @@ def _generator_view() -> None:
         client_logo = st.file_uploader("Logo del cliente (PNG / JPG)",
                                        type=["png", "jpg", "jpeg"],
                                        accept_multiple_files=False)
+        # Live palette preview
+        if client_logo is not None:
+            logo_bytes_preview = client_logo.getvalue()
+            try:
+                pal = preview_palette(logo_bytes_preview)
+                pcols = st.columns([1, 4])
+                with pcols[0]:
+                    st.image(logo_bytes_preview, width=80)
+                with pcols[1]:
+                    st.markdown(
+                        f'<div style="display:flex; gap:0.5rem; align-items:center;">'
+                        f'<div style="width:32px; height:32px; border-radius:4px; '
+                        f'background:{pal.primary}; border:1px solid #E6E8EE;"></div>'
+                        f'<div><strong>Color principal detectado:</strong> '
+                        f'<code>{pal.primary}</code></div>'
+                        f'</div>',
+                        unsafe_allow_html=True,
+                    )
+                    st.caption("Este color se usará como acento del cliente en la PPT.")
+            except Exception:
+                st.warning("No se pudo procesar el logo para extraer color. Se usará el color default.")
 
     with st.container(border=True):
         st.markdown("**2 · Datos de la operación**")
@@ -222,11 +249,24 @@ def _run_generation(*, excel_bytes: bytes, logo_bytes: bytes | None,
                 api_key=api_key,
                 progress_cb=progress,
             )
+    except ClientNameMissingError as e:
+        st.error(f"❌ {e}")
+        return
     except SchemaError as e:
-        st.error(f"Error de estructura: {e}")
+        st.error(f"❌ {e}")
+        st.info("Revisa que el archivo provenga de la exportación n8n estándar.")
+        return
+    except EmptyAfterFilterError as e:
+        st.error(f"❌ {e}")
+        return
+    except LogoInvalidError as e:
+        st.error(f"❌ {e}")
+        return
+    except PipelineError as e:
+        st.error(f"❌ {e}")
         return
     except Exception as e:
-        st.error(f"Falló la generación: {type(e).__name__}: {e}")
+        st.error(f"❌ Falló la generación: {type(e).__name__}: {e}")
         return
 
     # Success view

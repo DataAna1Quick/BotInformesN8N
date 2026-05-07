@@ -10,6 +10,11 @@ from typing import Callable
 
 from .color_extractor import ClientConfig, Palette, extract_palette
 from .eda import run as run_eda
+from .errors import (
+    ClientNameMissingError,
+    EmptyAfterFilterError,
+    PipelineError,
+)
 from .indicators import IndicatorBundle, derive as derive_indicators_template
 from .metrics import compute as compute_metrics
 from .ppt_builder import PPTBuilder
@@ -97,13 +102,28 @@ def run_pipeline_full(
     api_key: str | None = None,
     progress_cb: Callable[[str], None] | None = None,
 ) -> dict:
-    """Same as run_pipeline but returns metadata + bytes for the UI."""
+    """Same as run_pipeline but returns metadata + bytes for the UI.
+
+    Raises subclasses of PipelineError on validation failures.
+    """
     log = progress_cb or (lambda msg: None)
-    log("Validando estructura...")
+
+    if not client_name or not client_name.strip():
+        raise ClientNameMissingError(
+            "Falta el nombre del cliente. No se puede generar la presentación sin él."
+        )
+
+    log("Validando estructura del Excel...")
     schema_check = validate_schema(excel_bytes)
 
     log("Análisis exploratorio...")
     report = run_eda(excel_bytes)
+    if report.n_rows_filtered == 0:
+        raise EmptyAfterFilterError(
+            "El Excel no tiene filas analizables después de aplicar los filtros "
+            f"(estado de servicio excluidos: {report.filters_applied.get('service_state_exclude', [])}). "
+            "Verifica el archivo."
+        )
 
     log("Calculando KPIs...")
     kpis = compute_metrics(report)
@@ -125,9 +145,9 @@ def run_pipeline_full(
         log("  modo plantilla")
 
     log("Extrayendo paleta del logo...")
-    palette = extract_palette(client_logo_bytes)
+    palette = extract_palette(client_logo_bytes, strict=True)
     config = ClientConfig(
-        name=client_name or "Cliente",
+        name=client_name.strip(),
         logo_bytes=client_logo_bytes,
         palette=palette,
     )
@@ -147,3 +167,8 @@ def run_pipeline_full(
         "palette_primary": palette.primary,
         "n_indicators": len(bundle.indicators),
     }
+
+
+def preview_palette(client_logo_bytes: bytes | None) -> Palette:
+    """Public helper used by the UI to preview the palette before generating."""
+    return extract_palette(client_logo_bytes, strict=False)

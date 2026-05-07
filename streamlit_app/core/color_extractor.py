@@ -7,8 +7,10 @@ from io import BytesIO
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 from sklearn.cluster import KMeans
+
+from .errors import LogoInvalidError
 
 
 # Defaults if extraction fails or no logo provided.
@@ -90,17 +92,36 @@ def extract_palette(
     logo: bytes | str | Path | BytesIO | None,
     *,
     n_clusters: int = 6,
+    strict: bool = False,
 ) -> Palette:
     """Build a Palette from the dominant non-neutral colour of a logo.
 
-    If `logo` is None or extraction fails, returns the default palette.
+    - If `logo` is None, returns the default palette silently.
+    - If `logo` cannot be parsed and `strict=True`, raises LogoInvalidError.
+      Otherwise returns the default palette.
     """
     if logo is None:
         return Palette()
 
+    if isinstance(logo, bytes):
+        # Reject obvious non-raster formats up front (SVG/PDF) — PIL can't handle them.
+        head = logo[:64].lstrip()
+        if head.startswith(b"<?xml") or head.startswith(b"<svg") or head.startswith(b"%PDF"):
+            if strict:
+                raise LogoInvalidError(
+                    "El logo está en un formato vectorial (SVG/PDF) que no es compatible. "
+                    "Convierte el logo a PNG o JPG y vuelve a subirlo."
+                )
+            return Palette()
+
     try:
         img = Image.open(BytesIO(logo) if isinstance(logo, bytes) else logo)
-    except Exception:
+    except (UnidentifiedImageError, OSError) as e:
+        if strict:
+            raise LogoInvalidError(
+                f"No se pudo leer el logo como imagen: {type(e).__name__}. "
+                "Asegúrate de subir un PNG o JPG válido."
+            ) from e
         return Palette()
 
     img = img.convert("RGBA")
