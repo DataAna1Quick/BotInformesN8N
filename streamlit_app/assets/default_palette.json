@@ -1,0 +1,21 @@
+{
+  "provider": {
+    "name": "Quick Help SAS",
+    "primary": "#F4B400",
+    "dark": "#0F1419"
+  },
+  "client_default": {
+    "primary": "#1B3D7A",
+    "accent": "#F4B400"
+  },
+  "system": {
+    "white": "#FFFFFF",
+    "pale": "#F7F8FB",
+    "grey_light": "#E6E8EE",
+    "grey": "#7A7F8C",
+    "grey_dark": "#3F4452",
+    "success": "#2C7A4E",
+    "success_light": "#5BA77A",
+    "alert": "#C8102E"
+  }
+}

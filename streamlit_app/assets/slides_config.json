@@ -1,0 +1,27 @@
+{
+  "slides": [
+    {"id": "cover",         "enabled": true, "order": 1,  "title": "Portada"},
+    {"id": "exec_summary",  "enabled": true, "order": 2,  "title": "Resumen ejecutivo"},
+    {"id": "volume_month",  "enabled": true, "order": 3,  "title": "Volumen mensual"},
+    {"id": "service_mix",   "enabled": true, "order": 4,  "title": "Mix de tipo de servicio"},
+    {"id": "by_client",     "enabled": true, "order": 5,  "title": "Distribución por sede"},
+    {"id": "top_routes",    "enabled": true, "order": 6,  "title": "Top rutas"},
+    {"id": "top_drivers",   "enabled": true, "order": 7,  "title": "Top conductores"},
+    {"id": "vehicle_types", "enabled": true, "order": 8,  "title": "Tipos de vehículo"},
+    {"id": "keepers",       "enabled": true, "order": 9,  "title": "Concentración por tenedor"},
+    {"id": "manifests",     "enabled": true, "order": 10, "title": "Cumplimiento de manifiestos"},
+    {"id": "cargo_types",   "enabled": true, "order": 11, "title": "Tipos de mercancía"},
+    {"id": "conclusions",   "enabled": true, "order": 12, "title": "Conclusiones"},
+    {"id": "closing",       "enabled": true, "order": 13, "title": "Cierre"}
+  ],
+  "section_map": {
+    "1": {"label": "1 · RITMO OPERATIVO",        "slides": ["volume_month", "service_mix"]},
+    "2": {"label": "2 · CLIENTE",                 "slides": ["by_client", "top_routes"]},
+    "3": {"label": "3 · EQUIPO QUICK HELP",       "slides": ["top_drivers", "vehicle_types", "keepers"]},
+    "4": {"label": "4 · CALIDAD Y TRAZABILIDAD",  "slides": ["manifests", "cargo_types"]},
+    "5": {"label": "5 · CONCLUSIONES",            "slides": ["conclusions"]}
+  },
+  "default_filters": {
+    "service_state_exclude": ["5 - Cancelado", "7 - Finalizado Cancelado"]
+  }
+}

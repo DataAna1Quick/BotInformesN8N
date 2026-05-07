@@ -1,0 +1,31 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r streamlit_app/requirements.txt
+          pip install pytest pytest-cov
+
+      - name: Note about fixture
+        run: |
+          echo "tests/fixtures/n8n_sample.xlsx is gitignored — schema/eda tests will skip in CI."
+          echo "Run pytest locally with the real fixture for full coverage."
+
+      - name: Run pytest
+        run: pytest -q

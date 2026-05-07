@@ -1,0 +1,45 @@
+# Secrets
+.streamlit/secrets.toml
+streamlit_app/.streamlit/secrets.toml
+.env
+.env.*
+!.env.example
+
+# Logs
+dev_console/.api_log.jsonl
+*.log
+
+# Outputs
+output/
+*.pptx
+!tests/fixtures/*.pptx
+
+# Test fixtures with sensitive data (real client data)
+tests/fixtures/*.xlsx
+tests/fixtures/client_logo_*
+tests/fixtures/_generated_*
+
+# Python
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+build/
+dist/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
